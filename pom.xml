@@ -18,6 +18,8 @@
         <log4j.version>2.23.1</log4j.version>
         <modifiable-variable.version>4.1.2</modifiable-variable.version>
         <osgi.version>8.1.0</osgi.version>
+        <protocolstatefuzzer.version>1.0.0</protocolstatefuzzer.version>
+        <ralib.version>0.1-SNAPSHOT</ralib.version>
         <tlsattacker.core.version>5.3.0</tlsattacker.core.version>
         <tlsattacker.transport.version>5.3.0</tlsattacker.transport.version>
     </properties>
@@ -76,7 +78,12 @@
         <dependency>
             <groupId>com.github.protocolfuzzing</groupId>
             <artifactId>protocolstatefuzzer</artifactId>
-            <version>1.0.0</version>
+            <version>${protocolstatefuzzer.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.learnlib</groupId>
+            <artifactId>ralib</artifactId>
+            <version>${ralib.version}</version>
         </dependency>
         <dependency>
             <groupId>com.beust</groupId>

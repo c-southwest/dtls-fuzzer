@@ -7,8 +7,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 readonly SCRIPT_DIR
 readonly PATCHES_DIR="$SCRIPT_DIR/experiments/patches"
 
-readonly PROTOCOLSTATEFUZZER_COMMIT="398c9bc"
-readonly PROTOCOLSTATEFUZZER_REP_URL="https://github.com/protocol-fuzzing/protocol-state-fuzzer.git"
+readonly PROTOCOLSTATEFUZZER_COMMIT="414b37a"
+readonly PROTOCOLSTATEFUZZER_REP_URL="https://github.com/Kax-y/protocol-state-fuzzer.git"
 readonly PROTOCOLSTATEFUZZER_FOLDER="ProtocolState-Fuzzer"
 
 readonly TLSATTACKER_VERSION="v5.3.0"

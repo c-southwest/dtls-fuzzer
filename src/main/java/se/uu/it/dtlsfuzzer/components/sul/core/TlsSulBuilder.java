@@ -14,10 +14,10 @@ import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.outputs.TlsOutputChecke
 
 public class TlsSulBuilder implements SulBuilder<TlsInput, TlsOutput, TlsExecutionContext> {
 
-        private TlsSulAdapter sulAdapter = null;
+    private TlsSulAdapter sulAdapter = null;
 
-        public TlsSulBuilder() {
-        }
+    public TlsSulBuilder() {
+    }
 
     @Override
     public TlsSul build(SulConfig sulConfig,
@@ -39,7 +39,7 @@ public class TlsSulBuilder implements SulBuilder<TlsInput, TlsOutput, TlsExecuti
                         sulConfig.isFuzzingClient());
             }
             tlsSul.setSulAdapter(sulAdapter);
-       
-
-        
-        
+        }
+        return tlsSul;
+    }
+}

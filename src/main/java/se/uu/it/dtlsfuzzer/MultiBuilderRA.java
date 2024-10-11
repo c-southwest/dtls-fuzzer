@@ -34,6 +34,7 @@ import se.uu.it.dtlsfuzzer.components.sul.core.TlsSulBuilderRA;
 import se.uu.it.dtlsfuzzer.components.sul.core.config.TlsSulClientConfig;
 import se.uu.it.dtlsfuzzer.components.sul.core.config.TlsSulServerConfig;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsExecutionContextRA;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsInputTransformer;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.inputs.TlsAlphabetPojoXml;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.inputs.TlsInput;
 
@@ -41,9 +42,14 @@ public class MultiBuilderRA implements StateFuzzerConfigBuilder,
                 StateFuzzerBuilder<RegisterAutomatonWrapper<ParameterizedSymbol, PSymbolInstance>>, TestRunnerBuilder,
                 TimingProbeBuilder {
 
-        private AlphabetBuilder<ParameterizedSymbol> alphabetBuilder = new AlphabetBuilderStandard<ParameterizedSymbol>(
-                        new AlphabetSerializerXml<ParameterizedSymbol, TlsAlphabetPojoXml>(TlsInput.class,
+        private AlphabetBuilderStandard<TlsInput> tlsAlphabetBuilder = new AlphabetBuilderStandard<TlsInput>(
+                        new AlphabetSerializerXml<TlsInput, TlsAlphabetPojoXml>(TlsInput.class,
                                         TlsAlphabetPojoXml.class));
+
+        private DataType[] dataTypes = {};
+
+        private AlphabetBuilder<ParameterizedSymbol> alphabetBuilder = new TlsInputTransformer(tlsAlphabetBuilder,
+                        dataTypes);
 
         // SulBuilderImpl needs to be implemented
         private SulBuilder<PSymbolInstance, PSymbolInstance, TlsExecutionContextRA> sulBuilder = new TlsSulBuilderRA();

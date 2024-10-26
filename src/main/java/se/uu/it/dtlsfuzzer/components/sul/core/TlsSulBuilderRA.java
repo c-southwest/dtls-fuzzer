@@ -4,34 +4,37 @@ import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.SulBui
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SulConfig;
 import de.learnlib.ralib.words.PSymbolInstance;
 import se.uu.it.dtlsfuzzer.components.sul.core.config.TlsSulConfig;
-import se.uu.it.dtlsfuzzer.components.sul.mapper.DtlsInputMapperRA;
-import se.uu.it.dtlsfuzzer.components.sul.mapper.DtlsMapperComposerRA;
-import se.uu.it.dtlsfuzzer.components.sul.mapper.DtlsOutputMapperRA;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.DtlsInputMapper;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.DtlsMapperComposer;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.DtlsOutputMapper;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsExecutionContextRA;
-import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.outputs.TlsOutputBuilderRA;
-import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.outputs.TlsOutputCheckerRA;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsInputTransformer;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.outputs.TlsOutputBuilder;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.outputs.TlsOutputChecker;
 
 public class TlsSulBuilderRA implements SulBuilder<PSymbolInstance, PSymbolInstance, TlsExecutionContextRA> {
 
     private TlsSulAdapter sulAdapter = null;
+    private TlsInputTransformer inputTransformer = null;
 
-    public TlsSulBuilderRA() {
+    public TlsSulBuilderRA(TlsInputTransformer transformer) {
+        inputTransformer = transformer;
     }
 
     @Override
     public TlsSulRA build(SulConfig sulConfig,
             com.github.protocolfuzzing.protocolstatefuzzer.utils.CleanupTasks cleanupTasks) {
 
-        TlsOutputBuilderRA outputBuilder = new TlsOutputBuilderRA();
-        TlsOutputCheckerRA outputChecker = new TlsOutputCheckerRA();
+        TlsOutputBuilder outputBuilder = new TlsOutputBuilder();
+        TlsOutputChecker outputChecker = new TlsOutputChecker();
 
-        DtlsOutputMapperRA outputMapper = new DtlsOutputMapperRA(sulConfig.getMapperConfig(), outputBuilder);
-        DtlsInputMapperRA inputMapper = new DtlsInputMapperRA(sulConfig.getMapperConfig(), outputChecker);
+        DtlsOutputMapper outputMapper = new DtlsOutputMapper(sulConfig.getMapperConfig(), outputBuilder, outputChecker);
+        DtlsInputMapper inputMapper = new DtlsInputMapper(sulConfig.getMapperConfig(), outputChecker);
 
-        DtlsMapperComposerRA mapperComposer = new DtlsMapperComposerRA(inputMapper, outputMapper);
+        DtlsMapperComposer mapperComposer = new DtlsMapperComposer(inputMapper, outputMapper);
 
         TlsSulRA tlsSul = new TlsSulRA((TlsSulConfig) sulConfig, sulConfig.getMapperConfig(), mapperComposer,
-                cleanupTasks);
+                cleanupTasks, inputTransformer);
 
         if (sulConfig.getSulAdapterConfig().getAdapterPort() != null) {
             if (sulAdapter == null) {

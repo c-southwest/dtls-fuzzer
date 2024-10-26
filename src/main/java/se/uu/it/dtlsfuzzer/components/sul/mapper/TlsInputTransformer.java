@@ -6,13 +6,16 @@ import de.learnlib.ralib.data.DataType;
 import de.learnlib.ralib.words.InputSymbol;
 import de.learnlib.ralib.words.OutputSymbol;
 import de.learnlib.ralib.words.ParameterizedSymbol;
+import java.util.HashMap;
+import java.util.Map;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.inputs.TlsInput;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.inputs.TlsOutputSymbol;
 
 public class TlsInputTransformer extends AlphabetBuilderTransformer<TlsInput, ParameterizedSymbol> {
     // Map<DtlsInput, DataType[]> dataTypes; An idea, shared for all symbols for
     // now.
-    DataType[] dataTypes;
+    public final DataType[] dataTypes;
+    private Map<InputSymbol, TlsInput> translationMap = new HashMap<>();
 
     public TlsInputTransformer(AlphabetBuilderStandard<TlsInput> tlsAlphabetBuilder,
             DataType[] dataTypes) {
@@ -22,7 +25,7 @@ public class TlsInputTransformer extends AlphabetBuilderTransformer<TlsInput, Pa
 
     @Override
     public TlsInput fromTransformedInput(ParameterizedSymbol ti) {
-        throw new RuntimeException("Transforming an alphabet to TlsInput is as of yet not supported.");
+        return translationMap.get(ti);
     }
 
     @Override
@@ -31,10 +34,12 @@ public class TlsInputTransformer extends AlphabetBuilderTransformer<TlsInput, Pa
         // DataType[] empty = {}; // The default value if no DataTypes are defined
         // DataType[] typesForSymbol = this.dataTypes.getOrDefault(ri, empty);
         if (ri instanceof TlsOutputSymbol) {
-            return new OutputSymbol(symbolName, this.dataTypes);
+            return new OutputSymbol(symbolName);
         }
+        InputSymbol inputSymbol = new InputSymbol(symbolName, this.dataTypes);
 
-        return new InputSymbol(symbolName, this.dataTypes);
+        translationMap.put(inputSymbol, ri);
+        return inputSymbol;
     }
 
 }

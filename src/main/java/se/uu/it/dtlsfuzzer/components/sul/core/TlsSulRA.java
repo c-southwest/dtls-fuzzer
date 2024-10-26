@@ -12,6 +12,8 @@ import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.sulwra
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.Mapper;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.config.MapperConfig;
 import com.github.protocolfuzzing.protocolstatefuzzer.utils.CleanupTasks;
+import de.learnlib.ralib.data.DataValue;
+import de.learnlib.ralib.words.OutputSymbol;
 import de.learnlib.ralib.words.PSymbolInstance;
 import de.rub.nds.tlsattacker.core.config.Config;
 import de.rub.nds.tlsattacker.core.connection.InboundConnection;
@@ -31,10 +33,15 @@ import org.apache.logging.log4j.Logger;
 import se.uu.it.dtlsfuzzer.components.sul.core.config.ConfigDelegate;
 import se.uu.it.dtlsfuzzer.components.sul.core.config.TlsSulClientConfig;
 import se.uu.it.dtlsfuzzer.components.sul.core.config.TlsSulConfig;
-import se.uu.it.dtlsfuzzer.components.sul.mapper.DtlsMapperComposerRA;
-import se.uu.it.dtlsfuzzer.components.sul.mapper.DtlsOutputMapperRA;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.DtlsMapperComposer;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsExecutionContext;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsExecutionContextRA;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsInputTransformer;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsState;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.inputs.DtlsInput;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.inputs.TlsInput;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.outputs.TlsOutput;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.symbols.outputs.TlsOutputBuilderRA;
 
 /**
  * Implementation of {@link AbstractSul} that works for both clients and
@@ -86,26 +93,29 @@ public class TlsSulRA implements AbstractSul<PSymbolInstance, PSymbolInstance, T
     /**
      * Output mapper used to generate special output symbols.
      */
-    private DtlsOutputMapperRA outputMapper;
+    private TlsOutputBuilderRA outputBuilder;
 
-    private DtlsMapperComposerRA mapperComposer;
+    private DtlsMapperComposer mapperComposer;
 
     private TlsSulConfig sulConfig;
 
     private CleanupTasks cleanupTasks;
+
+    private TlsInputTransformer inputTransformer;
 
     private SulAdapter sulAdapter;
 
     private DynamicPortProvider dynamicPortProvider;
 
     public TlsSulRA(TlsSulConfig sulConfig, MapperConfig mapperConfig,
-            DtlsMapperComposerRA mapperComposer,
-            CleanupTasks cleanupTasks) {
+            DtlsMapperComposer mapperComposer,
+            CleanupTasks cleanupTasks, TlsInputTransformer transformer) {
         this.sulConfig = sulConfig;
         this.cleanupTasks = cleanupTasks;
         this.mapperComposer = mapperComposer;
+        this.inputTransformer = transformer;
 
-        outputMapper = new DtlsOutputMapperRA(mapperConfig, mapperComposer.getOutputBuilder());
+        outputBuilder = new TlsOutputBuilderRA();
         configDelegate = sulConfig.getConfigDelegate();
         if (sulConfig.isFuzzingClient()) {
             cleanupTasks.submit(new Runnable() {
@@ -244,7 +254,7 @@ public class TlsSulRA implements AbstractSul<PSymbolInstance, PSymbolInstance, T
         }
 
         if (!context.isExecutionEnabled()) {
-            return outputMapper.disabled();
+            return outputBuilder.buildDisabled();
         }
 
         PSymbolInstance output = null;
@@ -252,7 +262,7 @@ public class TlsSulRA implements AbstractSul<PSymbolInstance, PSymbolInstance, T
             TransportHandler transportHandler = context.getTlsContext().getTransportHandler();
             if (transportHandler == null || transportHandler.isClosed() || closed) {
                 closed = true;
-                return outputMapper.socketClosed();
+                return outputBuilder.buildSocketClosed();
             }
 
             output = executeInput(in);
@@ -270,11 +280,28 @@ public class TlsSulRA implements AbstractSul<PSymbolInstance, PSymbolInstance, T
         } catch (IOException e) {
             e.printStackTrace();
             closed = true;
-            return outputMapper.socketClosed();
+            return outputBuilder.buildSocketClosed();
         }
     }
 
-    private PSymbolInstance executeInput(PSymbolInstance in) {
+    private PSymbolInstance executeInput(PSymbolInstance input) {
+
+        // This method is just a bunch of crossing ones fingers and praying to a higher
+        // power.
+        DtlsInput convertedInput = (DtlsInput) inputTransformer.fromTransformedInput(input.getBaseSymbol());
+
+        DataValue<?> value = input.getParameterValues()[0];
+        convertedInput.setEpoch((Integer) value.getId());
+
+        // There seems to be no DtlsOutput with an epoch field so for now outputs have
+        // no parameters.
+        TlsOutput output = executeInput(convertedInput);
+
+        return new PSymbolInstance(new OutputSymbol(output.getName()));
+
+    }
+
+    private TlsOutput executeInput(TlsInput in) {
         LOGGER.debug("sent: {}", in.toString());
         context.getTlsContext()
                 .setTalkingConnectionEndType(context.getTlsContext().getChooser().getConnectionEndType());
@@ -283,12 +310,16 @@ public class TlsSulRA implements AbstractSul<PSymbolInstance, PSymbolInstance, T
             context.getTlsContext().getTransportHandler().setTimeout(originalTimeout + in.getExtendedWait());
         }
         if (sulConfig.getInputResponseTimeout() != null
-                && sulConfig.getInputResponseTimeout().containsKey(in.getBaseSymbol().getName())) {
+                && sulConfig.getInputResponseTimeout().containsKey(in.getName())) {
             context.getTlsContext().getTransportHandler()
-                    .setTimeout(sulConfig.getInputResponseTimeout().get(in.getBaseSymbol().getName()));
+                    .setTimeout(sulConfig.getInputResponseTimeout().get(in.getName()));
         }
 
-        PSymbolInstance output = mapperComposer.execute(in, context);
+        TlsExecutionContext mealyContext = new TlsExecutionContext(sulConfig, context.getState());
+
+        TlsOutput output = mapperComposer.execute(in, mealyContext);
+
+        context = new TlsExecutionContextRA(sulConfig, mealyContext.getState());
 
         LOGGER.debug("received: {}", output);
         context.getTlsContext().getTransportHandler().setTimeout(originalTimeout);
@@ -349,7 +380,7 @@ public class TlsSulRA implements AbstractSul<PSymbolInstance, PSymbolInstance, T
 
     @Override
     public Mapper<PSymbolInstance, PSymbolInstance, TlsExecutionContextRA> getMapper() {
-        return this.mapperComposer;
+        throw new RuntimeException("The mapper is of the wrong type, let's hope no one asks for it.");
     }
 
     @Override

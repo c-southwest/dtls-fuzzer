@@ -52,7 +52,9 @@ public class MultiBuilderRA implements StateFuzzerConfigBuilder,
                         dataTypes);
 
         // SulBuilderImpl needs to be implemented
-        private SulBuilder<PSymbolInstance, PSymbolInstance, TlsExecutionContextRA> sulBuilder = new TlsSulBuilderRA();
+
+        private SulBuilder<PSymbolInstance, PSymbolInstance, TlsExecutionContextRA> sulBuilder = new TlsSulBuilderRA(
+                        (TlsInputTransformer) alphabetBuilder);
         private SulWrapper<PSymbolInstance, PSymbolInstance, TlsExecutionContextRA> sulWrapper = new SulWrapperStandard<PSymbolInstance, PSymbolInstance, TlsExecutionContextRA>();
 
         MultiBuilderRA() {

@@ -3,7 +3,7 @@ package se.uu.it.dtlsfuzzer;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.learner.alphabet.AlphabetBuilder;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.learner.alphabet.AlphabetBuilderStandard;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.learner.alphabet.xml.AlphabetSerializerXml;
-import com.github.protocolfuzzing.protocolstatefuzzer.components.learner.config.LearnerConfigStandard;
+import com.github.protocolfuzzing.protocolstatefuzzer.components.learner.config.LearnerConfigRA;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.learner.statistics.RegisterAutomatonWrapper;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.SulBuilder;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.SulWrapper;
@@ -90,13 +90,13 @@ public class MultiBuilderRA implements StateFuzzerConfigBuilder,
 
         @Override
         public StateFuzzerClientConfig buildClientConfig() {
-                return new StateFuzzerClientConfigStandard(new LearnerConfigStandard(), new TlsSulClientConfig(),
+                return new StateFuzzerClientConfigStandard(new LearnerConfigRA(), new TlsSulClientConfig(),
                                 new TestRunnerConfigStandard(), new TimingProbeConfigStandard());
         }
 
         @Override
         public StateFuzzerServerConfig buildServerConfig() {
-                return new StateFuzzerServerConfigStandard(new LearnerConfigStandard(), new TlsSulServerConfig(),
+                return new StateFuzzerServerConfigStandard(new LearnerConfigRA(), new TlsSulServerConfig(),
                                 new TestRunnerConfigStandard(), new TimingProbeConfigStandard());
         }
 

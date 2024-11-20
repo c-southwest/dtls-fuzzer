@@ -10,7 +10,7 @@ public class MainRA {
 
     public static void main(String args[]) throws IOException, XMLStreamException {
         Security.addProvider(new BouncyCastleProvider());
-        MultiBuilder mb = new MultiBuilder();
+        MultiBuilderRA mb = new MultiBuilderRA();
         // String[] parentLoggers = {Main.class.getPackageName()};
 
         CommandLineParser<?> commandLineParser = new CommandLineParser<>(mb, mb, mb, mb);

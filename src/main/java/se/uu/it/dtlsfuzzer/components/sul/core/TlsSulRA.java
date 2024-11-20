@@ -12,7 +12,6 @@ import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.sulwra
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.Mapper;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.config.MapperConfig;
 import com.github.protocolfuzzing.protocolstatefuzzer.utils.CleanupTasks;
-import de.learnlib.ralib.data.DataValue;
 import de.learnlib.ralib.words.OutputSymbol;
 import de.learnlib.ralib.words.PSymbolInstance;
 import de.rub.nds.tlsattacker.core.config.Config;
@@ -34,6 +33,7 @@ import se.uu.it.dtlsfuzzer.components.sul.core.config.ConfigDelegate;
 import se.uu.it.dtlsfuzzer.components.sul.core.config.TlsSulClientConfig;
 import se.uu.it.dtlsfuzzer.components.sul.core.config.TlsSulConfig;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.DtlsMapperComposer;
+import se.uu.it.dtlsfuzzer.components.sul.mapper.OutputBuilderWrapper;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsExecutionContext;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsExecutionContextRA;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsInputTransformer;
@@ -290,8 +290,9 @@ public class TlsSulRA implements AbstractSul<PSymbolInstance, PSymbolInstance, T
         // power.
         DtlsInput convertedInput = (DtlsInput) inputTransformer.fromTransformedInput(input.getBaseSymbol());
 
-        DataValue<?> value = input.getParameterValues()[0];
-        convertedInput.setEpoch((Integer) value.getId());
+    // FIXME: enable parameters when no parameter learning is "working".
+        //DataValue<?> value = input.getParameterValues()[0];
+        //convertedInput.setEpoch((Integer) value.getId());
 
         // There seems to be no DtlsOutput with an epoch field so for now outputs have
         // no parameters.
@@ -316,7 +317,7 @@ public class TlsSulRA implements AbstractSul<PSymbolInstance, PSymbolInstance, T
         }
 
         TlsExecutionContext mealyContext = new TlsExecutionContext(sulConfig, context.getState());
-
+    LOGGER.debug("mealycontext: {}", mealyContext);
         TlsOutput output = mapperComposer.execute(in, mealyContext);
 
         context = new TlsExecutionContextRA(sulConfig, mealyContext.getState());
@@ -380,7 +381,9 @@ public class TlsSulRA implements AbstractSul<PSymbolInstance, PSymbolInstance, T
 
     @Override
     public Mapper<PSymbolInstance, PSymbolInstance, TlsExecutionContextRA> getMapper() {
-        throw new RuntimeException("The mapper is of the wrong type, let's hope no one asks for it.");
+        // Make a new wrapper instanace for now, depending on how heavily it is used it
+        // might be worth to make this a class variable.
+        return new OutputBuilderWrapper(outputBuilder);
     }
 
     @Override

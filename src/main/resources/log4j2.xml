@@ -13,7 +13,7 @@
         <Logger name="com.github.protocolfuzzing.protocolstatefuzzer" level="info" additivity="false">
             <AppenderRef ref="ConsoleAppender" />
         </Logger>
-        <Root level="info">
+        <Root level="debug">
             <AppenderRef ref="ConsoleAppender" />
         </Root>
     </Loggers>

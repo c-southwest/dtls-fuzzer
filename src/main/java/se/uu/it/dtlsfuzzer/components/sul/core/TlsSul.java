@@ -184,6 +184,7 @@ public class TlsSul extends AbstractSul {
                         receivedClientHello = true;
                         FirstCachedUdpLayer udpLayer = (FirstCachedUdpLayer)context.getState().getTlsContext().getLayerStack().getLowestLayer();
                         udpLayer.setFirstClientHelo(firstClientHello);
+                        udpLayer.isFuzzingClient = true;
                     } catch (SocketTimeoutException e) {
                         // try again
                     }

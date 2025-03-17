@@ -3,6 +3,7 @@ package se.uu.it.dtlsfuzzer.components.sul.core.config;
 import com.beust.jcommander.ParametersDelegate;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SulAdapterConfigStandard;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SulClientConfigStandard;
+import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SulConfig;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.config.MapperConfigStandard;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.config.MapperConnectionConfig;
 import de.rub.nds.tlsattacker.core.config.Config;
@@ -39,5 +40,21 @@ public class TlsSulClientConfig extends SulClientConfigStandard implements TlsSu
             serverDelegate.applyDelegate(config);
             config.getDefaultServerConnection().setTimeout(getResponseWait().intValue());
         }
+    }
+
+    @Override
+    public SulConfig cloneWithThreadId(int threadId) {
+        TlsSulClientConfig clone = new TlsSulClientConfig();
+        clone.clientWait = clientWait;
+        int oldPort = getPort();
+        int newPort = getPort() + threadId;
+        clone.setPort(newPort);
+        clone.setResponseWait(getResponseWait());
+        String newCommand = this.getCommand().replace("" + oldPort, "" + newPort);
+        clone.command = newCommand;
+        clone.setStartWait(getStartWait());
+        clone.processDir = getProcessDir();
+
+        return clone;
     }
 }

@@ -126,10 +126,17 @@ public class TlsSul extends AbstractSul {
         config.getDefaultClientConnection().setUseIpv6(false); // fix NullPointerException
         config.getDefaultServerConnection().setUseIpv6(false); // fix NullPointerException
         State state = new State(config, new WorkflowTrace());
-        String realHost = ((TlsSulServerConfig) sulConfig).getHost();
-        var split = realHost.split(":");
-        int port = Integer.parseInt(split[1]);
-        config.getDefaultClientConnection().setPort(port);
+        // fix port number
+        if (sulConfig.isFuzzingClient()){
+            int port = ((TlsSulClientConfig) sulConfig).getPort();
+            config.getDefaultServerConnection().setPort(port);
+        }else{
+            String realHost = ((TlsSulServerConfig) sulConfig).getHost();
+            var split = realHost.split(":");
+            int port = Integer.parseInt(split[1]);
+            config.getDefaultClientConnection().setPort(port);
+        }
+
 
         context = new TlsExecutionContext((TlsSulConfig) sulConfig, new TlsState(state));
         TransportHandler transportHandler = null;

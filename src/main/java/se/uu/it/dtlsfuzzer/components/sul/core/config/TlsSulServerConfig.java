@@ -2,6 +2,7 @@ package se.uu.it.dtlsfuzzer.components.sul.core.config;
 
 import com.beust.jcommander.ParametersDelegate;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SulAdapterConfigStandard;
+import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SulConfig;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.core.config.SulServerConfigStandard;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.config.MapperConfigStandard;
 import com.github.protocolfuzzing.protocolstatefuzzer.components.sul.mapper.config.MapperConnectionConfig;
@@ -39,5 +40,25 @@ public class TlsSulServerConfig  extends SulServerConfigStandard implements TlsS
             clientDelegate.applyDelegate(config);
             config.getDefaultClientConnection().setTimeout(getResponseWait().intValue());
         }
+    }
+
+    @Override
+    public SulConfig cloneWithThreadId(int threadId) {
+        TlsSulServerConfig clone = new TlsSulServerConfig();
+        clone.setResponseWait(getResponseWait());
+        clone.setStartWait(getStartWait());
+        clone.processDir = getProcessDir();
+        // host
+        String originalHost = this.getHost();
+        String[] hostParts = originalHost.split(":");
+        String hostname = hostParts[0];
+        int originalPort = Integer.parseInt(hostParts[1]);
+        int newPort = originalPort + threadId; // 使用不同端口
+        String newHost = hostname + ":" + newPort;
+        clone.setHost(newHost);
+        // command
+        String newCommand = this.getCommand().replace(" -p " + originalPort, " -p " + newPort);
+        clone.command = newCommand;
+        return clone;
     }
 }

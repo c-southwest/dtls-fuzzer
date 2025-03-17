@@ -34,6 +34,7 @@ import org.apache.logging.log4j.Logger;
 import se.uu.it.dtlsfuzzer.components.sul.core.config.ConfigDelegate;
 import se.uu.it.dtlsfuzzer.components.sul.core.config.TlsSulClientConfig;
 import se.uu.it.dtlsfuzzer.components.sul.core.config.TlsSulConfig;
+import se.uu.it.dtlsfuzzer.components.sul.core.config.TlsSulServerConfig;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.DtlsOutputMapper;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsExecutionContext;
 import se.uu.it.dtlsfuzzer.components.sul.mapper.TlsState;
@@ -125,6 +126,12 @@ public class TlsSul extends AbstractSul {
         config.getDefaultClientConnection().setUseIpv6(false); // fix NullPointerException
         config.getDefaultServerConnection().setUseIpv6(false); // fix NullPointerException
         State state = new State(config, new WorkflowTrace());
+        int defaultPort = state.getConfig().getDefaultClientConnection().getPort();
+        String realHost = ((TlsSulServerConfig) sulConfig).getHost();
+        var split = realHost.split(":");
+        int port = Integer.parseInt(split[1]);
+        config.getDefaultClientConnection().setPort(port);
+
         context = new TlsExecutionContext((TlsSulConfig) sulConfig, new TlsState(state));
         TransportHandler transportHandler = null;
 

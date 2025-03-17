@@ -2,8 +2,8 @@
 #
 # Installs some necessary packages and then installs DTLS-Fuzzer.
 
-readonly PROTOCOLSTATEFUZZER_COMMIT="398c9bc"
-readonly PROTOCOLSTATEFUZZER_REP_URL="https://github.com/protocol-fuzzing/protocol-state-fuzzer.git"
+readonly PROTOCOLSTATEFUZZER_BRANCH="parallel-implementation"
+readonly PROTOCOLSTATEFUZZER_REP_URL="https://github.com/c-southwest/protocol-state-fuzzer.git"
 readonly PROTOCOLSTATEFUZZER_FOLDER="ProtocolState-Fuzzer"
 
 readonly TLSATTACKER_BRANCH="add-DTLS-13-Support"
@@ -66,7 +66,7 @@ function install_protocolstatefuzzer() {
         echo "$PROTOCOLSTATEFUZZER_FOLDER folder already exists"
         echo "Skipping ProtocolState-Fuzzer setup"
     else
-        clone_rep $PROTOCOLSTATEFUZZER_FOLDER $PROTOCOLSTATEFUZZER_REP_URL $PROTOCOLSTATEFUZZER_COMMIT
+        clone_rep "$PROTOCOLSTATEFUZZER_FOLDER" "$PROTOCOLSTATEFUZZER_REP_URL" "$PROTOCOLSTATEFUZZER_BRANCH"
         (
             cd $PROTOCOLSTATEFUZZER_FOLDER || exit
             echo "Installing ProtocolState-Fuzzer"

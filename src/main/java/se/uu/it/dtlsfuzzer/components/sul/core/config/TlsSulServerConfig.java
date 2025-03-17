@@ -57,7 +57,7 @@ public class TlsSulServerConfig  extends SulServerConfigStandard implements TlsS
         String newHost = hostname + ":" + newPort;
         clone.setHost(newHost);
         // command
-        String newCommand = this.getCommand().replace(" -p " + originalPort, " -p " + newPort);
+        String newCommand = this.getCommand().replace("" + originalPort, "" + newPort);
         clone.command = newCommand;
         return clone;
     }

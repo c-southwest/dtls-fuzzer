@@ -126,7 +126,6 @@ public class TlsSul extends AbstractSul {
         config.getDefaultClientConnection().setUseIpv6(false); // fix NullPointerException
         config.getDefaultServerConnection().setUseIpv6(false); // fix NullPointerException
         State state = new State(config, new WorkflowTrace());
-        int defaultPort = state.getConfig().getDefaultClientConnection().getPort();
         String realHost = ((TlsSulServerConfig) sulConfig).getHost();
         var split = realHost.split(":");
         int port = Integer.parseInt(split[1]);

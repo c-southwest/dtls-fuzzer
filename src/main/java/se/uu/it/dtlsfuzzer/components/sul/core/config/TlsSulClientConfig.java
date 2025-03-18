@@ -65,6 +65,14 @@ public class TlsSulClientConfig extends SulClientConfigStandard implements TlsSu
             clone.sulAdapterConfig = new SulAdapterConfigStandard(newAdapterPort, this.sulAdapterConfig.getAdapterAddress());
         }
 
+        // JSSE-12-0-2 related
+        if (clone.command.contains("-threadStarterIpPort localhost:")) {
+            int adapterPort = this.sulAdapterConfig.getAdapterPort();
+            int newAdapterPort = adapterPort + threadId;
+            clone.command = clone.command.replace("-threadStarterIpPort localhost:"+adapterPort, "-threadStarterIpPort localhost:"+(newAdapterPort));
+            clone.sulAdapterConfig = new SulAdapterConfigStandard(newAdapterPort, this.sulAdapterConfig.getAdapterAddress());
+        }
+
         // threadId and threadsCount setting here.
         clone.threadId = threadId;
         clone.threadsCount = this.threadsCount;

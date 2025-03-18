@@ -59,6 +59,26 @@ public class TlsSulServerConfig  extends SulServerConfigStandard implements TlsS
         // command
         String newCommand = this.getCommand().replace("" + originalPort, "" + newPort);
         clone.command = newCommand;
+
+        clone.processTrigger = getProcessTrigger();
+
+        // PionDTLS-2-0-9_Server_psk related
+        if(getTerminateCommand() != null) {
+            clone.terminateCommand = getTerminateCommand().replace("" + originalPort, "" + newPort);
+        }
+
+        // Scandium-2-0-0-M16 config related
+        if (clone.command.contains("-starterAddress localhost:")) {
+            int adapterPort = this.sulAdapterConfig.getAdapterPort();
+            int newAdapterPort = adapterPort + threadId;
+            clone.command = clone.command.replace("-starterAddress localhost:"+adapterPort, "-starterAddress localhost:"+(newAdapterPort));
+            clone.sulAdapterConfig = new SulAdapterConfigStandard(newAdapterPort, this.sulAdapterConfig.getAdapterAddress());
+        }
+
+        // threadId and threadsCount setting here.
+        clone.threadId = threadId;
+        clone.threadsCount = this.threadsCount;
+
         return clone;
     }
 }

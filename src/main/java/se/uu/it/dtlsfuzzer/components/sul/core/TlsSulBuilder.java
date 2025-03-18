@@ -22,9 +22,7 @@ public class TlsSulBuilder implements SulBuilder {
         TlsSul tlsSul = new TlsSul((TlsSulConfig) sulConfig, sulConfig.getMapperConfig(),
                 new MapperComposer(new DtlsInputMapper(sulConfig.getMapperConfig(), new TlsOutputChecker()), outputMapper), cleanupTasks);
         if (sulConfig.getSulAdapterConfig().getAdapterPort() != null) {
-            if (sulAdapter == null) {
-                sulAdapter = new TlsSulAdapter(sulConfig.getSulAdapterConfig(), cleanupTasks, sulConfig.isFuzzingClient());
-            }
+            sulAdapter = new TlsSulAdapter(sulConfig.getSulAdapterConfig(), cleanupTasks, sulConfig.isFuzzingClient());
             tlsSul.setSulAdapter(sulAdapter);
         }
         return tlsSul;

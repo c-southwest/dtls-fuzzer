@@ -55,6 +55,20 @@ public class TlsSulClientConfig extends SulClientConfigStandard implements TlsSu
         clone.setStartWait(getStartWait());
         clone.processDir = getProcessDir();
 
+        clone.processTrigger = getProcessTrigger();
+
+        // Scandium-2-0-0-M16 config related
+        if (clone.command.contains("-starterAddress localhost:")) {
+            int adapterPort = this.sulAdapterConfig.getAdapterPort();
+            int newAdapterPort = adapterPort + threadId;
+            clone.command = clone.command.replace("-starterAddress localhost:"+adapterPort, "-starterAddress localhost:"+(newAdapterPort));
+            clone.sulAdapterConfig = new SulAdapterConfigStandard(newAdapterPort, this.sulAdapterConfig.getAdapterAddress());
+        }
+
+        // threadId and threadsCount setting here.
+        clone.threadId = threadId;
+        clone.threadsCount = this.threadsCount;
+
         return clone;
     }
 }

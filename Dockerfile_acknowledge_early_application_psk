@@ -1,0 +1,114 @@
+FROM maven:3.9.9-amazoncorretto-17-debian-bookworm AS builder
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    wget \
+    sudo \
+    m4 \
+    autoconf \
+    automake \
+    libtool \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# get DTLS-Fuzzer source code
+RUN git clone -b add-DTLS-13 https://github.com/c-southwest/dtls-fuzzer \
+    && cd dtls-fuzzer \
+    && git checkout 9aa4578d1856100648568255dd8963e9a7105461
+
+WORKDIR /dtls-fuzzer
+
+# install wolfSSL Release 5.7.6
+RUN ./setup_sut.sh wolfssl-5.7.6
+
+# get protocol-state-fuzzer source code and install
+RUN git clone https://github.com/protocol-fuzzing/protocol-state-fuzzer.git \
+    && cd protocol-state-fuzzer \
+    && git checkout 398c9bc \
+    && mvn install -DskipTests
+
+# get TLS-Attacker source code and install
+RUN git clone -b add-DTLS-13-Support https://github.com/c-southwest/TLS-Attacker.git \
+    && cd TLS-Attacker \
+    && git checkout 6f736e65740a9626e9ccb0234d9dab7f5c5fb77b \
+    && mvn install -DskipTests
+
+# install DTLS-Fuzzer
+RUN mvn install
+
+
+FROM ubuntu:24.04
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tcpdump \
+    openjdk-17-jre-headless \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /dtls-fuzzer
+
+# copy DTLS-Fuzzer related files
+COPY --from=builder /dtls-fuzzer/target /dtls-fuzzer/target
+COPY --from=builder /dtls-fuzzer/args/wolfssl /dtls-fuzzer/args/wolfssl
+COPY --from=builder /dtls-fuzzer/examples /dtls-fuzzer/examples
+COPY --from=builder /dtls-fuzzer/experiments/configs /dtls-fuzzer/experiments/configs
+
+# copy wolfSSL compiled files
+COPY --from=builder /dtls-fuzzer/suts/wolfssl-5.7.6/examples/server /dtls-fuzzer/suts/wolfssl-5.7.6/examples/server
+COPY --from=builder /dtls-fuzzer/suts/wolfssl-5.7.6/src/.libs /dtls-fuzzer/suts/wolfssl-5.7.6/src/.libs
+COPY --from=builder /dtls-fuzzer/suts/wolfssl-5.7.6/src/.deps /dtls-fuzzer/suts/wolfssl-5.7.6/src/.deps
+COPY --from=builder /dtls-fuzzer/suts/wolfssl-5.7.6/certs /dtls-fuzzer/suts/wolfssl-5.7.6/certs
+
+# Insert an early Application
+RUN <<EOF cat > examples/tests/servers/psk_DTLS13
+PSK_CLIENT_HELLO
+PSK_CLIENT_HELLO
+APPLICATION
+FINISHED
+APPLICATION
+EOF
+
+# launch tcpdump and DTLS-Fuzzer to capture traffic
+RUN <<'EOL' cat > run.sh
+#!/bin/bash
+# Create output directory
+mkdir -p /output
+
+# Display wolfssl logs
+echo -e -n "\n-redirectOutputStreams" >> args/wolfssl/learn_wolfssl_server_psk_DTLS13
+
+# Set capture filename and log filename
+CAPTURE_FILE="/output/dtls_capture_$(date +%Y%m%d_%H%M%S).pcap"
+LOG_FILE="/output/running_output_$(date +%Y%m%d_%H%M%S).txt"
+echo "Capturing traffic to: $CAPTURE_FILE"
+echo "Logging Java output to: $LOG_FILE"
+
+# Start tcpdump to capture UDP traffic on loopback interface (run in background)
+tcpdump -i lo -w "$CAPTURE_FILE" udp &
+TCPDUMP_PID=$!
+
+# Run DTLS-Fuzzer test and redirect output to log file
+echo "Starting DTLS-Fuzzer test..."
+# Certificate authentication with Client certificate required
+java -jar target/dtls-fuzzer.jar args/wolfssl/learn_wolfssl_server_psk_DTLS13 -test examples/tests/servers/psk_DTLS13 2>&1 | tee "$LOG_FILE"
+TEST_EXIT_CODE=${PIPESTATUS[0]}
+
+sleep 1
+
+# Gracefully terminate tcpdump
+echo "Stopping tcpdump capture..."
+kill -INT $TCPDUMP_PID
+wait $TCPDUMP_PID
+
+# Copy wolfssl sslkeylog.log to output folder
+cp suts/wolfssl-5.7.6/sslkeylog.log /output
+
+echo "Traffic saved to: $CAPTURE_FILE"
+echo "Java output saved to: $LOG_FILE"
+echo "sslkeylog.log saved to: /output/sslkeylog.log"
+echo "Test completed with exit code: $TEST_EXIT_CODE"
+exit $TEST_EXIT_CODE
+EOL
+
+RUN chmod +x run.sh
+
+CMD ["bash", "-c", "./run.sh"]

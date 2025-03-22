@@ -56,6 +56,7 @@ public class TlsSulClientConfig extends SulClientConfigStandard implements TlsSu
         clone.processDir = getProcessDir();
 
         clone.processTrigger = getProcessTrigger();
+        clone.mapperConfig = getMapperConfig();
 
         // Scandium-2-0-0-M16 config related
         if (clone.command.contains("-starterAddress localhost:")) {

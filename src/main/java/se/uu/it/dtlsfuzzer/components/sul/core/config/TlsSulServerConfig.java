@@ -61,6 +61,7 @@ public class TlsSulServerConfig  extends SulServerConfigStandard implements TlsS
         clone.command = newCommand;
 
         clone.processTrigger = getProcessTrigger();
+        clone.mapperConfig = getMapperConfig();
 
         // PionDTLS-2-0-9_Server_psk related
         if(getTerminateCommand() != null) {

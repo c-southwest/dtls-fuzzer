@@ -37,6 +37,13 @@ public class FinishedInput extends DtlsInput {
             return;
         }
         getTlsContext(context).getDigest().reset();
+
+        // in DTLS 1.3, we need to skip the bottom code, otherwise we will start sending message with Epoch=3 and Seq=2
+        // Without skip we can also complete handshake, but I prefer to make Seq number more correct.
+        if (getTlsContext(context).getConfig().getHighestProtocolVersion().isDTLS13()){
+            return;
+        }
+
         // we have to make this change for learning to scale
         getTlsContext(context).setWriteSequenceNumber(getTlsContext(context).getWriteEpoch(), lastSequenceNumber + 1);
     }

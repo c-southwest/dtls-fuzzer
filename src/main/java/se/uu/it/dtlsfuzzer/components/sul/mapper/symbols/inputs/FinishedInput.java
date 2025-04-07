@@ -13,7 +13,6 @@ public class FinishedInput extends DtlsInput {
     @XmlAttribute(name = "resetMSeq", required = true)
     private boolean resetMSeq = false;
 
-    private long lastSequenceNumber;
 
     public FinishedInput() {
         super("FINISHED");
@@ -24,7 +23,6 @@ public class FinishedInput extends DtlsInput {
         // Uncomment line to print digest, TODO remove this when polishing things up
         // System.out.println(ArrayConverter.bytesToHexString(state.getTlsContext().getDigest().getRawBytes()));
         FinishedMessage message = new FinishedMessage();
-        lastSequenceNumber = context.getTlsContext().getWriteSequenceNumber(context.getTlsContext().getWriteEpoch());
         // context.getTlsContext().setWriteEpoch(context.getTlsContext().getWriteEpoch() + 1);
         // context.getTlsContext().setWriteSequenceNumber(context.getTlsContext().getWriteEpoch(), 0L);
         return new TlsProtocolMessage(message);

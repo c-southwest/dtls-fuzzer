@@ -43,8 +43,6 @@ public class FinishedInput extends DtlsInput {
         if (context.getTlsContext().getConfig().getHighestProtocolVersion().isDTLS13()){
             return;
         }
-        // we have to make this change for learning to scale
-        context.getTlsContext().setWriteSequenceNumber(context.getTlsContext().getWriteEpoch(), lastSequenceNumber + 1);
     }
 
     @Override

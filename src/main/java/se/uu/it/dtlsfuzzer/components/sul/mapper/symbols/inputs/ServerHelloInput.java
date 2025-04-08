@@ -69,7 +69,7 @@ public class ServerHelloInput extends DtlsInput {
     @Override
     public void postReceiveUpdate(TlsOutput output, OutputChecker<TlsOutput> abstractOutputChecker,
             TlsExecutionContext context) {
-        if (shortHs && context.isExecutionEnabled()) {
+        if (false && context.isExecutionEnabled()) {
             Pair<ProtocolMessage, Record> lastChPair = null;
             int lastChStepIndex = -1;
             List<Pair<ProtocolMessage, Record>> msgRecPairs = context.getReceivedMessagesAndRecords();
